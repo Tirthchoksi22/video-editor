@@ -229,15 +229,18 @@ export default function Home() {
                     src={preview} 
                     style={{
                       width: dimensions.width,
-                      height: dimensions.height
+                      height: dimensions.height,
+                      objectFit: 'contain'
                     }}
                     onLoadedMetadata={(e) => {
                       const video = e.currentTarget;
                       setDuration(Math.floor(video.duration));
                     }}
                     onTimeUpdate={(e) => {
-                      if (e.currentTarget.currentTime >= timing.end) {
-                        e.currentTarget.pause();
+                      const video = e.currentTarget;
+                      setCurrentTime(Math.floor(video.currentTime));
+                      if (video.currentTime >= timing.end) {
+                        video.pause();
                         setIsPlaying(false);
                         setIsComplete(true);
                       }
@@ -286,34 +289,33 @@ export default function Home() {
             {formatTime(currentTime)} / {formatTime(duration)}
           </Text>
 
-          <Slider
-            className="flex-1"
-            value={currentTime}
-            onChange={setCurrentTime}
-            max={duration}
-            min={0}
-            label={formatTime}
-            size="sm"
-            disabled={!preview}
-            marks={[
-              { value: timing.start, label: 'Start' },
-              { value: timing.end, label: 'End' },
-            ]}
-          />
-
-          <ActionIcon 
-            variant="subtle"
-            disabled={!preview}
-          >
-            <IconPlayerSkipForward size={20} />
-          </ActionIcon>
-        </div>
-
-        <div className="mt-2 flex justify-between text-xs text-gray-500">
-          {['10s', '20s', '30s', '40s', '50s'].map((mark) => (
-            <span key={mark}>{mark}</span>
-          ))}
-          <span>1m</span>
+          <div className="flex-1">
+            <Slider
+              value={currentTime}
+              onChange={(value) => {
+                setCurrentTime(value);
+                if (mediaType === 'video' && videoRef.current) {
+                  videoRef.current.currentTime = value;
+                }
+              }}
+              max={duration}
+              min={0}
+              label={formatTime}
+              size="sm"
+              disabled={!preview}
+              marks={[
+                { value: timing.start, label: 'Start' },
+                { value: timing.end, label: 'End' },
+              ]}
+            />
+            <div className="mt-2 flex justify-between text-xs text-gray-500 px-4">
+              <span>0s</span>
+              {Array.from({ length: Math.min(4, Math.ceil(duration / 20)) }, (_, i) => (i + 1) * 20).map((seconds) => (
+                <span key={seconds}>{seconds}s</span>
+              ))}
+              {duration > 80 && <span>{Math.floor(duration / 60)}m</span>}
+            </div>
+          </div>
         </div>
       </div>
     </>
