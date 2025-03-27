@@ -1,103 +1,323 @@
+"use client";
+
 import Image from "next/image";
+import { useState, useEffect, useRef } from "react";
+import { Box, Button, Paper, Text, NumberInput, Group, Slider, ActionIcon, Stack } from '@mantine/core';
+import Link from "next/link";
+import { IconPlayerSkipBack, IconPlayerPlay, IconPlayerPause, IconPlayerSkipForward, IconHome, IconVideo, IconSettings, IconRadio } from '@tabler/icons-react';
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  
+  const [preview, setPreview] = useState<string | null>(null);
+  const [mediaType, setMediaType] = useState<'image' | 'video' | null>(null);
+  const [dimensions, setDimensions] = useState({ width: 640, height: 360 });
+  const [timing, setTiming] = useState({ start: 0, end: 10 });
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(60);
+  const [isComplete, setIsComplete] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (isPlaying) {
+      timer = setInterval(() => {
+        setCurrentTime(prev => {
+          if (prev >= timing.end) {
+            setIsPlaying(false);
+            setIsComplete(true);
+            return timing.end;
+          }
+          return prev + 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [isPlaying, timing.end]);
+
+  const handleFileUpload = (file: File) => {
+    const fileType = file.type.split('/')[0];
+    if (fileType !== 'image' && fileType !== 'video') {
+      alert('Please upload only images or videos');
+      return;
+    }
+
+    setMediaType(fileType as 'image' | 'video');
+    const fileUrl = URL.createObjectURL(file);
+    setPreview(fileUrl);
+    setIsComplete(false);
+    
+    // Set default 5s duration for images
+    if (fileType === 'image') {
+      setTiming({ start: 0, end: 5 });
+    }
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}.0`;
+  };
+
+  const handlePlay = () => {
+    if (!preview) return; // Don't play if no media
+    
+    if (isComplete) {
+      setIsComplete(false);
+      setCurrentTime(timing.start);
+    }
+    
+    setIsPlaying(!isPlaying);
+    if (!isPlaying) {
+      if (mediaType === 'video' && videoRef.current) {
+        videoRef.current.currentTime = currentTime;
+        videoRef.current.play();
+      }
+    } else {
+      if (mediaType === 'video' && videoRef.current) {
+        videoRef.current.pause();
+      }
+    }
+  };
+
+  return (
+    <>
+      <div className="grid grid-cols-6 h-full"> 
+        <div className="col-span-1">
+          <Paper shadow="xs" p="xl" h="95%">
+            <div className="flex flex-col items-center justify-center">
+              <Text size="xl" mb="md">Tirth's Video Editor</Text>
+              <Stack gap="md" w="100%">
+                <Button
+                  variant="light"
+                  fullWidth
+                  leftSection={<IconHome size={18} />}
+                  onClick={() => {}}
+                >
+                  Home
+                </Button>
+                <Button
+                  variant="light" 
+                  fullWidth
+                  leftSection={<IconVideo size={18} />}
+                  onClick={() => {}}
+                >
+                  Video
+                </Button>
+                <Button
+                  variant="light"
+                  fullWidth
+                  leftSection={<IconRadio size={18} />}
+                  onClick={() => {}}
+                >
+                  Audio
+                </Button>
+                <Button
+                  variant="light"
+                  fullWidth
+                  leftSection={<IconSettings size={18} />}
+                  onClick={() => {}}
+                >
+                  Settings
+                </Button>
+              </Stack>
+            </div>
+          </Paper>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+        <div className="col-span-1">
+          <Paper shadow="xs" p="xl" h="95%">
+            <div className="flex flex-col items-center justify-center">
+              <Text size="sm" mb="md">Upload Media</Text>
+              <div 
+                className="border-2 border-dashed border-gray-300 rounded-lg p-6 cursor-pointer hover:border-gray-400 transition-colors"
+                onClick={() => {
+                  const fileInput = document.querySelector<HTMLInputElement>('#fileInput');
+                  if (fileInput) fileInput.click();
+                }}
+                onDrop={(e: React.DragEvent) => {
+                  e.preventDefault();
+                  const files = e.dataTransfer.files;
+                  if (files.length) {
+                    handleFileUpload(files[0]);
+                  }
+                }}
+                onDragOver={(e: React.DragEvent) => e.preventDefault()}
+              >
+                <input
+                  type="file"
+                  id="fileInput"
+                  className="hidden"
+                  accept="image/*,video/*"
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                    if (e.target.files?.length) {
+                      handleFileUpload(e.target.files[0]);
+                    }
+                  }}
+                />
+                <div className="text-center">
+                  <Text size="sm" c="dimmed">Drag and drop or click to upload</Text>
+                  <Text size="xs" c="dimmed">Supports images and videos</Text>
+                </div>
+                
+              </div>
+              <div className="mt-5">
+              <Text mb="lg">Adjustments</Text>
+              </div>
+              <NumberInput
+                label="Width"
+                value={dimensions.width}
+                onChange={(val) => setDimensions(prev => ({ ...prev, width: Number(val) }))}
+                min={100}
+                max={1920}
+                mb="xs"
+              />
+              
+              <NumberInput
+                label="Height"
+                value={dimensions.height}
+                onChange={(val) => setDimensions(prev => ({ ...prev, height: Number(val) }))}
+                min={100}
+                max={1080}
+                mb="lg"
+              />
+
+              <NumberInput
+                label="Start Time (s)"
+                value={timing.start}
+                onChange={(val) => setTiming(prev => ({ ...prev, start: Number(val) }))}
+                min={0}
+                mb="xs"
+              />
+
+              <NumberInput
+                label="End Time (s)"
+                value={timing.end}
+                onChange={(val) => setTiming(prev => ({ ...prev, end: Number(val) }))}
+                min={timing.start + 1}
+                mb="md"
+              />
+
+              <Group>
+                <Button 
+                  onClick={handlePlay}
+                >
+                  {isPlaying ? 'Stop' : 'Play'}
+                </Button>
+                <Text>Time: {currentTime}s</Text>
+              </Group>
+            </div>
+          </Paper>
+        </div>
+        <div className="col-span-4 p-4">
+          <div className="flex flex-col items-center justify-center">
+            <Text size="xl" mb="md">Welcome to the Video Editor</Text>
+          </div>
+          <Paper shadow="xs" p="2xl" m="xl">
+            <div className="w-full h-[500px] bg-black rounded-lg flex items-center justify-center">
+              {preview && !isComplete && currentTime >= timing.start && currentTime <= timing.end ? (
+                mediaType === 'image' ? (
+                  <img 
+                    src={preview} 
+                    alt="Preview" 
+                    style={{
+                      width: dimensions.width,
+                      height: dimensions.height,
+                      objectFit: 'contain'
+                    }}
+                  />
+                ) : (
+                  <video 
+                    ref={videoRef}
+                    src={preview} 
+                    style={{
+                      width: dimensions.width,
+                      height: dimensions.height
+                    }}
+                    onLoadedMetadata={(e) => {
+                      const video = e.currentTarget;
+                      setDuration(Math.floor(video.duration));
+                    }}
+                    onTimeUpdate={(e) => {
+                      if (e.currentTarget.currentTime >= timing.end) {
+                        e.currentTarget.pause();
+                        setIsPlaying(false);
+                        setIsComplete(true);
+                      }
+                    }}
+                  />
+                )
+              ) : (
+                <Text c="dimmed">
+                  {preview ? 'Playback complete' : 'Upload media to preview it here'}
+                </Text>
+              )}
+            </div>
+          </Paper>
+        </div>
+      </div>
+      <div className="mt-4 px-4">
+        <div className="flex items-center gap-4">
+          <Group>
+            <ActionIcon 
+              variant="subtle" 
+              onClick={() => setCurrentTime(timing.start)}
+              disabled={!preview}
+            >
+              <IconPlayerSkipBack size={18} />
+            </ActionIcon>
+            <ActionIcon 
+              variant="subtle" 
+              onClick={handlePlay}
+              disabled={!preview}
+            >
+              {isPlaying ? 
+                <IconPlayerPause size={20} /> : 
+                <IconPlayerPlay size={20} />
+              }
+            </ActionIcon>
+            <ActionIcon 
+              variant="subtle" 
+              onClick={() => setCurrentTime(timing.end)}
+              disabled={!preview}
+            >
+              <IconPlayerSkipForward size={20} />
+            </ActionIcon>
+          </Group>
+
+          <Text size="sm" className="min-w-[100px]">
+            {formatTime(currentTime)} / {formatTime(duration)}
+          </Text>
+
+          <Slider
+            className="flex-1"
+            value={currentTime}
+            onChange={setCurrentTime}
+            max={duration}
+            min={0}
+            label={formatTime}
+            size="sm"
+            disabled={!preview}
+            marks={[
+              { value: timing.start, label: 'Start' },
+              { value: timing.end, label: 'End' },
+            ]}
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+
+          <ActionIcon 
+            variant="subtle"
+            disabled={!preview}
+          >
+            <IconPlayerSkipForward size={20} />
+          </ActionIcon>
+        </div>
+
+        <div className="mt-2 flex justify-between text-xs text-gray-500">
+          {['10s', '20s', '30s', '40s', '50s'].map((mark) => (
+            <span key={mark}>{mark}</span>
+          ))}
+          <span>1m</span>
+        </div>
+      </div>
+    </>
   );
 }
