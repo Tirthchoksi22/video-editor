@@ -1,13 +1,10 @@
 "use client";
 
-import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
-import { Box, Button, Paper, Text, NumberInput, Group, Slider, ActionIcon, Stack } from '@mantine/core';
-import Link from "next/link";
+import { Button, Paper, Text, NumberInput, Group, Slider, ActionIcon, Stack } from '@mantine/core';
 import { IconPlayerSkipBack, IconPlayerPlay, IconPlayerPause, IconPlayerSkipForward, IconHome, IconVideo, IconSettings, IconRadio } from '@tabler/icons-react';
 
 export default function Home() {
-  
   const [preview, setPreview] = useState<string | null>(null);
   const [mediaType, setMediaType] = useState<'image' | 'video' | null>(null);
   const [dimensions, setDimensions] = useState({ width: 640, height: 360 });
