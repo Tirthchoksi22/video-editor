@@ -83,7 +83,7 @@ export default function Home() {
         <div className="col-span-1">
           <Paper shadow="xs" p="xl" h="95%">
             <div className="flex flex-col items-center justify-center">
-              <Text size="xl" mb="md">Tirth's Video Editor</Text>
+              <Text size="xl" mb="md">Tirth&apos;s Video Editor</Text>
               <Stack gap="md" w="100%">
                 <Button
                   variant="light"
