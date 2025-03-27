@@ -9,12 +9,37 @@ export default function Home() {
   const [preview, setPreview] = useState<string | null>(null);
   const [mediaType, setMediaType] = useState<'image' | 'video' | null>(null);
   const [dimensions, setDimensions] = useState({ width: 640, height: 360 });
+  const [maxDimensions, setMaxDimensions] = useState({ width: 800, height: 450 });
   const [timing, setTiming] = useState({ start: 0, end: 10 });
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(60);
   const [isComplete, setIsComplete] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const updateMaxDimensions = () => {
+      if (containerRef.current) {
+        const container = containerRef.current;
+        const containerWidth = container.clientWidth - 48; // Account for padding
+        const containerHeight = container.clientHeight - 48;
+        
+        // Calculate max dimensions maintaining 16:9 aspect ratio
+        const maxWidth = containerWidth;
+        const maxHeight = Math.min(containerHeight, maxWidth * (9/16));
+        
+        setMaxDimensions({
+          width: maxWidth,
+          height: maxHeight
+        });
+      }
+    };
+
+    updateMaxDimensions();
+    window.addEventListener('resize', updateMaxDimensions);
+    return () => window.removeEventListener('resize', updateMaxDimensions);
+  }, []);
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -164,18 +189,24 @@ export default function Home() {
               <NumberInput
                 label="Width"
                 value={dimensions.width}
-                onChange={(val) => setDimensions(prev => ({ ...prev, width: Number(val) }))}
+                onChange={(val) => setDimensions(prev => ({ 
+                  ...prev, 
+                  width: Math.min(Number(val), maxDimensions.width) 
+                }))}
                 min={100}
-                max={1920}
+                max={maxDimensions.width}
                 mb="xs"
               />
               
               <NumberInput
                 label="Height"
                 value={dimensions.height}
-                onChange={(val) => setDimensions(prev => ({ ...prev, height: Number(val) }))}
+                onChange={(val) => setDimensions(prev => ({ 
+                  ...prev, 
+                  height: Math.min(Number(val), maxDimensions.height) 
+                }))}
                 min={100}
-                max={1080}
+                max={maxDimensions.height}
                 mb="lg"
               />
 
@@ -196,7 +227,7 @@ export default function Home() {
               />
 
               <Group>
-                <Button 
+                <Button m="xs"
                   onClick={handlePlay}
                 >
                   {isPlaying ? 'Stop' : 'Play'}
@@ -210,16 +241,16 @@ export default function Home() {
           <div className="flex flex-col items-center justify-center">
             <Text size="xl" mb="md">Welcome to the Video Editor</Text>
           </div>
-          <Paper shadow="xs" p="2xl" m="xl">
-            <div className="w-full h-[500px] bg-black rounded-lg flex items-center justify-center">
+          <Paper shadow="xs" p="lg" h="90%">
+            <div ref={containerRef} className="w-full h-[500px] bg-black rounded-lg flex items-center justify-center overflow-hidden">
               {preview && !isComplete && currentTime >= timing.start && currentTime <= timing.end ? (
                 mediaType === 'image' ? (
                   <Image
                     src={preview} 
                     alt="Preview" 
                     style={{
-                      width: dimensions.width,
-                      height: dimensions.height,
+                      width: Math.min(dimensions.width, maxDimensions.width),
+                      height: Math.min(dimensions.height, maxDimensions.height),
                       objectFit: 'contain'
                     }}
                   />
@@ -228,8 +259,8 @@ export default function Home() {
                     ref={videoRef}
                     src={preview} 
                     style={{
-                      width: dimensions.width,
-                      height: dimensions.height,
+                      width: Math.min(dimensions.width, maxDimensions.width),
+                      height: Math.min(dimensions.height, maxDimensions.height),
                       objectFit: 'contain'
                     }}
                     onLoadedMetadata={(e) => {
