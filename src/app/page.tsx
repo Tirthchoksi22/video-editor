@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import Image from "next/image";
 import { Button, Paper, Text, NumberInput, Group, Slider, ActionIcon, Stack } from '@mantine/core';
 import { IconPlayerSkipBack, IconPlayerPlay, IconPlayerPause, IconPlayerSkipForward, IconHome, IconVideo, IconSettings, IconRadio } from '@tabler/icons-react';
 
@@ -213,7 +214,7 @@ export default function Home() {
             <div className="w-full h-[500px] bg-black rounded-lg flex items-center justify-center">
               {preview && !isComplete && currentTime >= timing.start && currentTime <= timing.end ? (
                 mediaType === 'image' ? (
-                  <img 
+                  <Image
                     src={preview} 
                     alt="Preview" 
                     style={{
